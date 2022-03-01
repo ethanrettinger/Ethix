@@ -1,0 +1,7 @@
+{
+	"name":"Nano",
+	"description":"Fullscreen terminal application that allows for expedient editing of text files (but better than vim)",
+	"version":"1.0",
+	"author":"Elliot Alderson",
+	"scripts": ["index.js"]
+}

@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'JetBrains Mono Medium', monospace;
+    overflow: hidden;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+}
+textarea {
+    padding: 1rem;
+    font-size: 0.9rem;
+    width: 100%;
+    resize: none;
+    outline: none;
+    border: none;
+    white-space: pre;
+}
+
+#output {
+    height: 95vh;
+    background: #181818;
+    color: white;
+    overflow: auto;
+    padding: 1rem;
+}
+
+#input {
+    height: 5vh;
+    background: #1f1f1f;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#prompt {
+    padding-left: 1rem;
+    
+}
+
+#in {
+    height: 5vh;
+    background: #1f1f1f;
+    color: white;
+    padding-left: 0.4rem;
+}
+
+
+
+/* make the terminal scrollbar gray */
+::-webkit-scrollbar {
+    width: 0.5rem;
+    background-color: #333333;
+    -webkit-border-radius: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #666666;
+    -webkit-border-radius: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #333333;
+    -webkit-border-radius: 0.5rem;
+    border-radius: 0.5rem;
+}
