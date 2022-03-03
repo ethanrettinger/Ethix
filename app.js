@@ -19,180 +19,134 @@ app.get('/', (req, res) => {
 app.get('/command', (req, res) => {});
 
 app.post('/packages', async (req, res) => {
-    if (req.body.operation === 'install') {
-        let url = path.join(__dirname, 'packages', req.body.url);
-        if (!url) {
-            res.send({
-                success: false,
-                message: 'No URL provided',
-            });
-            return;
-        }
-
-        try {
-            var package_json = fs.readFileSync(url + '\\package.json', 'utf8');
-        } catch (err) {
-            res.send({
-                success: false,
-                message: 'No package.json found',
-            });
-            return;
-        }
-        package_json = JSON.parse(package_json);
-        let package_name = package_json.name;
-        let package_path = path.join(__dirname, 'public', 'termpackages', package_name);
-        if (fs.existsSync(package_path)) {
-            res.send({
-                success: false,
-                message: 'Package is already installed in the package folder.',
-            });
-            return;
-        }
-        fs.mkdirSync(package_path);
-        fs.writeFileSync(
-            path.join(__dirname, 'public', 'termpackages', package_name, 'package.json'),
-            JSON.stringify(package_json)
-        );
-        for (let scriptz in package_json.scripts) {
-            let script = package_json.scripts[scriptz];
-            var file = await fs.promises.readFile(path.join(__dirname, 'packages', package_name, script), 'utf8');
-            if (!file) {
-                res.send({
-                    success: false,
-                    message: 'No script found named ' + script,
-                });
-                return;
-            }
-            fs.writeFileSync(path.join(__dirname, 'public', 'termpackages', package_name, script), file);
-        }
-        res.send({
-            success: true,
-            message: 'Package downloaded',
-            scriptContents: file,
-        });
-    } else if (req.body.operation === 'reinstall') {
-        let url = path.join(__dirname, 'packages', req.body.url);
-        if (!url) {
-            res.send({
-                success: false,
-                message: 'No URL provided',
-            });
-            return;
-        }
-
-        try {
-            var package_json = await fs.promises.readFile(url + '\\package.json', 'utf8');
-        } catch (err) {
-            res.send({
-                success: false,
-                message: 'No package.json found',
-            });
-            return;
-        }
-        package_json = JSON.parse(package_json);
-        let package_name = package_json.name;
-        try {
-            await fs.promises.rmdir(
-                path.join(__dirname, 'public', 'termpackages', package_name),
-                { recursive: true },
-                err => {
+    switch (req.body.operation) {
+        case 'install':
+            // copy the package from packages/ to public/termpackages
+            const package = req.body.package;
+            const packagePath = path.join(__dirname, 'packages', package);
+            const destPath = path.join(__dirname, 'public', 'termpackages', package);
+            const files = fs.readdirSync(packagePath);
+            files.forEach(file => {
+                // async
+                fs.copyFile(path.join(packagePath, file), path.join(destPath, file), err => {
                     if (err) {
                         console.log(err);
                     }
-                }
-            );
-        } catch (err) {
-            console.log(err);
-        }
-        let package_path = path.join(__dirname, 'public', 'termpackages', package_name);
-        await fs.promises.mkdir(package_path);
-        await fs.promises.writeFile(
-            path.join(__dirname, 'public', 'termpackages', package_name, 'package.json'),
-            JSON.stringify(package_json)
-        );
-        for (let scriptz in package_json.scripts) {
-            let script = package_json.scripts[scriptz];
-            var file = await fs.promises.readFile(path.join(__dirname, 'packages', package_name, script), 'utf8');
-            if (!file) {
+                });
+            });
+            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
+            res.send({
+                success: true,
+                message: 'Successfully reinstalled package',
+                scripts: scripts
+            });
+            break;
+        case 'reinstall':
+            // delete the package from public/termpackages
+            // if the package doesn't exist in the public/termpackages folder, continue normally
+            const package = req.body.package;
+            const packagePath = path.join(__dirname, 'public', 'termpackages', package);
+            if (!fs.existsSync(packagePath)) {
                 res.send({
                     success: false,
-                    message: 'No script found named ' + script,
+                    message: 'No package found',
                 });
                 return;
             }
-            await fs.promises.writeFile(path.join(__dirname, 'public', 'termpackages', package_name, script), file);
-        }
-        res.send({
-            success: true,
-            message: 'Package downloaded',
-            scriptContents: file,
-        });
-    } else if (req.body.operation === 'delete') {
-        let url = path.join(__dirname, 'packages', req.body.url);
-        if (!url) {
-            res.send({
-                success: false,
-                message: 'No URL provided',
-            });
-            return;
-        }
-        try {
-            fs.rmdirSync(path.join(__dirname, 'public', 'termpackages', req.body.url), { recursive: true }, err => {
+            
+            fs.rm(packagePath, { recursive: true }, err => {
                 if (err) {
                     console.log(err);
                 }
             });
-        } catch (err) {
-            console.log(err);
-        }
-        res.send({
-            success: true,
-            message: 'Package uninstalled',
-        });
-    } else if (req.body.operation === "create") {
-        let url = path.join(__dirname, 'packages', req.body.url);
-        if (!url) {
-            res.send({
-                success: false,
-                message: 'No package name provided',
+            const destPath = path.join(__dirname, 'public', 'termpackages', package);
+            const files = fs.readdirSync(packagePath);
+            files.forEach(file => {
+                // async
+                fs.copyFile(path.join(packagePath, file), path.join(destPath, file), err => {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
             });
-            return;
-        }
-        let package_path = path.join(__dirname, 'packages', req.body.url);
-        if (fs.existsSync(package_path)) {
+            // read the package json file and get the scripts array
+            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
             res.send({
-                success: false,
-                message: 'Package already exists',
+                success: true,
+                message: 'Successfully reinstalled package',
+                scripts: scripts
             });
-            return;
-        }
-        fs.mkdirSync(package_path);
-        fs.writeFileSync(
-            path.join(__dirname, 'packages', req.body.url, 'package.json'),
-            JSON.stringify({
-                name: req.body.url,
-                version: '1.0.0',
-                description: 'This is an auto-generated package.',
-                author: 'Me',
-                scripts: [ "index.js" ],
-            })
-        );
-        fs.writeFileSync(
-            path.join(__dirname, 'packages', req.body.url, 'index.js'),
-            `\// Write your code here.`
-        );
-        res.send({
-            success: true,
-            message: 'Package created successfully in the package repository.',
-        });
+            break;
+        case 'uninstall':
+            // delete the package from public/termpackages
+            // if the package doesn't exist in the public/termpackages folder, return error
+            const package = req.body.package;
+            const packagePath = path.join(__dirname, 'public', 'termpackages', package);
+            if (!fs.existsSync(packagePath)) {
+                res.send({
+                    success: false,
+                    message: 'No package found',
+                });
+                return;
+            }
 
-    } else {
-        res.send({
-            success: false,
-            message: 'No operation provided',
-        })
+            fs.rm(packagePath, { recursive: true }, err => {
+                if (err) {
+                    console.log(err);
+                }
+            });
+            res.send({
+                success: true,
+                message: 'Successfully uninstalled package',
+            });
+            break;
+        case 'create':
+            // create a new package in packages/
+            let package = req.body.package;
+            let packagePath = path.join(__dirname, 'packages', package);
+            if (fs.existsSync(packagePath)) {
+                res.send({
+                    success: false,
+                    message: 'Package already exists',
+                });
+                return;
+            }
+            
+            await fs.promises.mkdir(packagePath);
+            await fs.promises.writeFile(
+                path.join(__dirname, 'packages', package, 'package.json'),
+                JSON.stringify({
+                    name: package,
+                    version: '1.0.0',
+                    description: 'This is an auto-generated package.',
+                    author: 'Me',
+                    scripts: ["index.js"],
+                })
+            );
+            await fs.promises.writeFile(
+                path.join(__dirname, 'packages', package, 'index.js'),
+                `\// Write your code here.`
+            );
+            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'packages', package, 'package.json'), 'utf8')).scripts;
+            res.send({
+                success: true,
+                message: 'Successfully created package',
+                scripts: scripts
+            });
+            break;
+        default:
+            res.send({
+                success: false,
+                message: 'Invalid Ethix Package Manager operation provided',
+            });
+            break;
     }
 });
+
+
+
+
+
 
 // when a get request is sent to /file read the file and send it back
 // the request will be formatted like /file/directory
