@@ -22,17 +22,31 @@ app.post('/packages', async (req, res) => {
     switch (req.body.operation) {
         case 'install':
             // copy the package from packages/ to public/termpackages
-            const package = req.body.package;
-            const packagePath = path.join(__dirname, 'packages', package);
-            const destPath = path.join(__dirname, 'public', 'termpackages', package);
-            const files = fs.readdirSync(packagePath);
-            files.forEach(file => {
+            package = req.body.package;
+            packagePath = path.join(__dirname, 'packages', package);
+            destPath = path.join(__dirname, 'public', 'termpackages', package);
+            let files = fs.readdirSync(packagePath);
+            try {
+                await fs.promises.mkdir(destPath);
+            } catch (err) {
+                if (err.code !== 'EEXIST') {
+                    res.send({
+                        success: false,
+                        error: err
+                    });
+                    return;
+                } else {
+                    res.send({
+                        success: false,
+                        error: 'Package already installed'
+                    });
+                    return;
+                }
+            }
+             
+            files.forEach(async (file) => {
                 // async
-                fs.copyFile(path.join(packagePath, file), path.join(destPath, file), err => {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
+                await fs.promises.copyFile(path.join(packagePath, file), path.join(destPath, file));
             });
             let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
             res.send({
@@ -44,8 +58,8 @@ app.post('/packages', async (req, res) => {
         case 'reinstall':
             // delete the package from public/termpackages
             // if the package doesn't exist in the public/termpackages folder, continue normally
-            const package = req.body.package;
-            const packagePath = path.join(__dirname, 'public', 'termpackages', package);
+            package = req.body.package;
+            packagePath = path.join(__dirname, 'public', 'termpackages', package);
             if (!fs.existsSync(packagePath)) {
                 res.send({
                     success: false,
@@ -54,23 +68,16 @@ app.post('/packages', async (req, res) => {
                 return;
             }
             
-            fs.rm(packagePath, { recursive: true }, err => {
-                if (err) {
-                    console.log(err);
-                }
-            });
-            const destPath = path.join(__dirname, 'public', 'termpackages', package);
-            const files = fs.readdirSync(packagePath);
+            fs.rm(packagePath, { recursive: true }, err => { });
+            destPath = path.join(__dirname, 'public', 'termpackages', package);
+            files = await fs.promises.readdir(packagePath);
             files.forEach(file => {
                 // async
                 fs.copyFile(path.join(packagePath, file), path.join(destPath, file), err => {
-                    if (err) {
-                        console.log(err);
-                    }
                 });
             });
             // read the package json file and get the scripts array
-            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
+            scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
             res.send({
                 success: true,
                 message: 'Successfully reinstalled package',
@@ -80,8 +87,8 @@ app.post('/packages', async (req, res) => {
         case 'uninstall':
             // delete the package from public/termpackages
             // if the package doesn't exist in the public/termpackages folder, return error
-            const package = req.body.package;
-            const packagePath = path.join(__dirname, 'public', 'termpackages', package);
+            package = req.body.package;
+            packagePath = path.join(__dirname, 'public', 'termpackages', package);
             if (!fs.existsSync(packagePath)) {
                 res.send({
                     success: false,
@@ -89,11 +96,8 @@ app.post('/packages', async (req, res) => {
                 });
                 return;
             }
-            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
+            scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
             fs.rm(packagePath, { recursive: true }, err => {
-                if (err) {
-                    console.log(err);
-                }
             });
             res.send({
                 success: true,
@@ -103,8 +107,8 @@ app.post('/packages', async (req, res) => {
             break;
         case 'create':
             // create a new package in packages/
-            let package = req.body.package;
-            let packagePath = path.join(__dirname, 'packages', package);
+            package = req.body.package;
+            packagePath = path.join(__dirname, 'packages', package);
             if (fs.existsSync(packagePath)) {
                 res.send({
                     success: false,
@@ -128,7 +132,7 @@ app.post('/packages', async (req, res) => {
                 path.join(__dirname, 'packages', package, 'index.js'),
                 `\// Write your code here.`
             );
-            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'packages', package, 'package.json'), 'utf8')).scripts;
+            scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'packages', package, 'package.json'), 'utf8')).scripts;
             res.send({
                 success: true,
                 message: 'Successfully created package',
@@ -182,8 +186,6 @@ app.post('/file/*', (req, res) => {
 app.get('/files/*', (req, res) => {
     let file = req.params[0];
     let file_path = path.join(__dirname, 'fs', file.toString() + '\\');
-    console.log(fs.readdirSync(file_path));
-    console.log(file_path)
     if (!fs.existsSync(file_path)) {
         res.send({
             success: false,

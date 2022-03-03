@@ -39,13 +39,8 @@ class CommandManager {
         this.commands[commandName].func(commandArgs);
     }
     tabComplete(text) {
-        let possibleCommands = [];
-        for (let command in this.commands) {
-            if (command.startsWith(text)) {
-                possibleCommands.push(command);
-            }
-        }
-        return possibleCommands;
-
+        
     }
 }
+
+
