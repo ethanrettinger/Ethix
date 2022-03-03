@@ -85,6 +85,151 @@ commandManager.add("epm", "Download a package from the internet. The URL must en
         });
     }
 });
+// rewrite the above function to be more compact
+
+commandManager.add("epm", "Download a package from the internet. The URL must end with .js, as the downloader reads the content on the page", "epm (install|reinstall|uninstall|create) (package name)", async (args) => {
+    if (!args[1]) { return terminal.err("No package name provided"); }
+    switch (args[0]) {
+        case "install":
+            terminal.log("Installing package...".yellow());
+            fetch("/packages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    package: args[1],
+                    operation: args[0],
+                    user: "default"
+                })
+            }).then(res => {
+                return res.json();
+            }).then(res => {
+                if (!res.success) { return terminal.err(res.message); }
+                // iterate through res.scripts and append them to the DOM
+                res.scripts.forEach((script, index) => {
+                    let script2 = document.createElement("script");
+                    script2.id = `package-${script.split(".")[0]}-${index}`;
+                    script2.src = `/termpackages/${script}`;
+                    document.body.appendChild(script2);
+                });
+                terminal.log("Package downloaded successfully!".green());
+            }).catch(err => {
+                terminal.err(err);
+            });
+            break;
+        case "reinstall":
+            terminal.log("Reinstalling package...".yellow());
+            fetch("/packages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    package: args[1],
+                    operation: "reinstall",
+                    user: "default"
+                })
+            }).then(res => {
+                return res.json();
+            }).then(res => {
+                if (!res.success) { return terminal.err(res.message); }
+                // iterate through all scripts in res.scripts and remove them from the DOM
+                res.scripts.forEach((script, index) => {
+                    let script2 = document.getElementById(`package-${script.split(".")[0]}-${index}`);
+                    script2.parentNode.removeChild(script2);
+                });
+
+
+                // send a request to the server to install the package
+                fetch("/packages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        package: args[1],
+                        operation: "install",
+                        user: "default"
+                    })
+                }).then(res => {
+                    return res.json();
+                }).then(res => {
+                    if (!res.success) { return terminal.err(res.message); }
+                    // iterate through res.scripts and append them to the DOM
+                    res.scripts.forEach((script, index) => {
+                        let script2 = document.createElement("script");
+                        script2.id = `package-${script.split(".")[0]}-${index}`;
+                        script2.src = `/termpackages/${script}`;
+                        document.body.appendChild(script2);
+                    });
+                    terminal.log("Package reinstalled successfully!".green());
+                }).catch(err => {
+                    terminal.err(err);
+                });
+            }).catch(err => {
+                terminal.err(err);
+            });
+            break;
+        case "uninstall":
+            terminal.log("Uninstalling package...".yellow());
+            fetch("/packages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    package: args[1],
+                    operation: args[0],
+                    user: "default"
+                })
+            }).then(res => {
+                return res.json();
+            }).then(res => {
+                if (!res.success) { return terminal.err(res.message); }
+                // iterate through res.scripts and remove them from the DOM
+                res.scripts.forEach((script, index) => {
+                    let script2 = document.getElementById(`package-${script.split(".")[0]}-${index}`);
+                    script2.parentNode.removeChild(script2);
+                });
+                terminal.log("Package uninstalled successfully!".green());
+            }).catch(err => {
+                terminal.err(err);
+            });
+            break;
+        case "create":
+            terminal.log("Creating package...".yellow());
+            fetch("/packages", {    
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    package: args[1],
+                    operation: args[0],
+                    user: "default"
+                })
+            }).then(res => {
+                return res.json();
+            }).then(res => {
+                if (!res.success) { return terminal.err(res.message); }
+                terminal.log("Package created successfully!".green());
+                terminal.log("Navigate to " + "/packages/".green() + " in the server view the package.");
+                
+            }).catch(err => {
+                terminal.err(err);
+            });
+            break;
+        default:
+            terminal.err("Invalid operation");
+            break;
+    }
+});
+                    
+
+            
+
+
 
 commandManager.add("help", "Lists a(ll) command(s) and their proper usage.", "help [command]", (args) => {
     terminal.log("\t[] = optional".gray());

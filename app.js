@@ -89,7 +89,7 @@ app.post('/packages', async (req, res) => {
                 });
                 return;
             }
-
+            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
             fs.rm(packagePath, { recursive: true }, err => {
                 if (err) {
                     console.log(err);
@@ -98,6 +98,7 @@ app.post('/packages', async (req, res) => {
             res.send({
                 success: true,
                 message: 'Successfully uninstalled package',
+                scripts: scripts
             });
             break;
         case 'create':
