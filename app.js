@@ -44,44 +44,50 @@ app.post('/packages', async (req, res) => {
                 }
             }
              
-            files.forEach(async (file) => {
-                // async
-                await fs.promises.copyFile(path.join(packagePath, file), path.join(destPath, file));
-            });
-            let scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
+            // write all of the files in the package to the public/termpackages folder
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i];
+                let filePath = path.join(packagePath, file);
+                let destFilePath = path.join(destPath, file);
+                fs.copyFileSync(filePath, destFilePath);
+            }
+            // get the scripts key from the package.json
+            let packageJson = JSON.parse(fs.readFileSync(path.join(packagePath, 'package.json'))).scripts;
             res.send({
                 success: true,
                 message: 'Successfully reinstalled package',
-                scripts: scripts
+                scripts: packageJson
             });
             break;
         case 'reinstall':
             // delete the package from public/termpackages
             // if the package doesn't exist in the public/termpackages folder, continue normally
             package = req.body.package;
-            packagePath = path.join(__dirname, 'public', 'termpackages', package);
+            packagePath = path.join(__dirname, 'packages', package);
+            destPath = path.join(__dirname, 'public', 'termpackages', package);
             if (!fs.existsSync(packagePath)) {
                 res.send({
                     success: false,
-                    message: 'No package found',
+                    message: 'No package available.',
                 });
                 return;
             }
             
-            fs.rm(packagePath, { recursive: true }, err => { });
-            destPath = path.join(__dirname, 'public', 'termpackages', package);
-            files = await fs.promises.readdir(packagePath);
-            files.forEach(file => {
-                // async
-                fs.copyFile(path.join(packagePath, file), path.join(destPath, file), err => {
-                });
-            });
-            // read the package json file and get the scripts array
-            scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
+            try { fs.rmSync(destPath, { recursive: true }, err => { }); } catch (err) { }
+            fs.mkdirSync(destPath);
+            items = fs.readdirSync(path.join(__dirname, 'packages', package));
+            for (let i = 0; i < items.length; i++) {
+                let file = items[i];
+                let filePath = path.join(packagePath, file);
+                let destFilePath = path.join(destPath, file);
+                fs.copyFileSync(filePath, destFilePath);
+            }
+            // get the scripts key from the package.json
+            scriptsJson = JSON.parse(fs.readFileSync(path.join(packagePath, 'package.json'))).scripts;
             res.send({
                 success: true,
                 message: 'Successfully reinstalled package',
-                scripts: scripts
+                scripts: scriptsJson
             });
             break;
         case 'uninstall':
@@ -89,6 +95,7 @@ app.post('/packages', async (req, res) => {
             // if the package doesn't exist in the public/termpackages folder, return error
             package = req.body.package;
             packagePath = path.join(__dirname, 'public', 'termpackages', package);
+            destPath = path.join(__dirname, 'public', 'termpackages', package);
             if (!fs.existsSync(packagePath)) {
                 res.send({
                     success: false,
@@ -96,13 +103,12 @@ app.post('/packages', async (req, res) => {
                 });
                 return;
             }
-            scripts = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'termpackages', package, 'package.json'), 'utf8')).scripts;
-            fs.rm(packagePath, { recursive: true }, err => {
-            });
+            scripts_ = JSON.parse(fs.readFileSync(path.join(packagePath, 'package.json'))).scripts;
+            fs.rm(packagePath, { recursive: true }, err => { });
             res.send({
                 success: true,
                 message: 'Successfully uninstalled package',
-                scripts: scripts
+                scripts: scripts_
             });
             break;
         case 'create':
@@ -208,7 +214,19 @@ app.get('/installedpackages', (req, res) => {
         packages: packages,
     });
 });
-
+app.get('/log', (req, res) => {
+    let log = fs.readFileSync(path.join(__dirname, 'log.log'), 'utf8');
+    res.send(log);
+});
+app.post('/log', (req, res) => {
+    let log = req.body.log;
+    // append the log to ./log.log
+    fs.appendFileSync(path.join(__dirname, 'log.log'), log);
+    res.send({
+        success: true,
+        message: 'Log saved',
+    });
+});
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });

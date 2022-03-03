@@ -109,13 +109,13 @@ commandManager.add("epm", "Download a package from the internet. The URL must en
                 // iterate through res.scripts and append them to the DOM
                 res.scripts.forEach((script, index) => {
                     let script2 = document.createElement("script");
-                    script2.id = `package-${script.split(".")[0]}-${index}`;
-                    script2.src = `/termpackages/${script}`;
+                    script2.id = `package-${args[1]}-${index}`;
+                    script2.src = `/termpackages/${args[1]}/${script}`;
                     document.body.appendChild(script2);
                 });
                 terminal.log("Package downloaded successfully!".green());
             }).catch(err => {
-                terminal.err(err);
+                console.log(err)
             });
             break;
         case "reinstall":
@@ -136,8 +136,8 @@ commandManager.add("epm", "Download a package from the internet. The URL must en
                 if (!res.success) { return terminal.err(res.message); }
                 // iterate through all scripts in res.scripts and remove them from the DOM
                 res.scripts.forEach((script, index) => {
-                    let script2 = document.getElementById(`package-${script.split(".")[0]}-${index}`);
-                    script2.parentNode.removeChild(script2);
+                    let script2 = document.getElementById(`package-${args[1]}-${index}`);
+                    script2?.parentNode?.removeChild(script2);
                 });
 
 
@@ -159,16 +159,17 @@ commandManager.add("epm", "Download a package from the internet. The URL must en
                     // iterate through res.scripts and append them to the DOM
                     res.scripts.forEach((script, index) => {
                         let script2 = document.createElement("script");
-                        script2.id = `package-${script.split(".")[0]}-${index}`;
-                        script2.src = `/termpackages/${script}`;
+                        script2.id = `package-${args[1]}-${index}`;
+                        script2.src = `/termpackages/${args[1]}/${script}`;
                         document.body.appendChild(script2);
                     });
                     terminal.log("Package reinstalled successfully!".green());
+                    location.reload(true)
                 }).catch(err => {
-                    terminal.err(err);
+                    console.log(err)
                 });
             }).catch(err => {
-                terminal.err(err);
+                console.log(err)
             });
             break;
         case "uninstall":
@@ -190,9 +191,10 @@ commandManager.add("epm", "Download a package from the internet. The URL must en
                 // iterate through res.scripts and remove them from the DOM
                 res.scripts.forEach((script, index) => {
                     let script2 = document.getElementById(`package-${script.split(".")[0]}-${index}`);
-                    script2.parentNode.removeChild(script2);
+                    script2?.parentNode?.removeChild(script2);
                 });
                 terminal.log("Package uninstalled successfully!".green());
+                location.reload(true)
             }).catch(err => {
                 terminal.err(err);
             });
@@ -215,7 +217,6 @@ commandManager.add("epm", "Download a package from the internet. The URL must en
                 if (!res.success) { return terminal.err(res.message); }
                 terminal.log("Package created successfully!".green());
                 terminal.log("Navigate to " + "/packages/".green() + " in the server view the package.");
-                
             }).catch(err => {
                 terminal.err(err);
             });

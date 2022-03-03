@@ -1,7 +1,17 @@
 class Term {
     log(message) {
-        document.getElementById("output").innerHTML += message.replaceAll("\n", "<br>").replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0") + "<br>";
+        let msg = message.replaceAll("\n", "<br>").replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0") + "<br>";
+        document.getElementById("output").innerHTML += msg;
         document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
+        // send post to /log
+        if(!message) message = ""; 
+        fetch('/log', { 
+            method: 'POST', 
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ log: msg })
+        });
     }
 
     cls() {
@@ -10,15 +20,30 @@ class Term {
     }
 
     log_nnl(message) {
-        document.getElementById("output").innerHTML += message.replaceAll("\n", "<br>").replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0");
+        if(!message) message = ""; 
+        let msg = message.replaceAll("\n", "<br>").replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0") + "<br>";
+        document.getElementById("output").innerHTML += msg
         document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
+        fetch('/log', { 
+            method: 'POST', 
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ log: msg })
+        });
     }
 
     err(message) {
-        document.getElementById("output").innerHTML += "ERROR: ".red().bold() + message.replaceAll("\n", "<br>").replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0").red() + "<br>".red();
+        if(!message) message = ""; 
+        let msg = "ERROR: ".red().bold() + message.replaceAll("\n", "<br>").replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0").red() + "<br>".red();
+        document.getElementById("output").innerHTML += msg
         document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
+        fetch('/log', { 
+            method: 'POST', 
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ log: msg })
+        });
     }
 }
-
-
-// create string prototypes that allow for color formatting

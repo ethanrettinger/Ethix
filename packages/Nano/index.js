@@ -37,7 +37,6 @@ document.getElementById("output").addEventListener("keydown", async (event) => {
     // if ctrl+x is pressed and the terminal is editable write the file to console and clear the terminal
     if(event.ctrlKey && event.key === 'x' && document.getElementById("output").isContentEditable) {
         event.preventDefault();
-        document.getElementById('line-number').remove();
         document.getElementById("output").contentEditable = false;
         fetch(`/file/${openedFile}`, {
             method: 'POST',
