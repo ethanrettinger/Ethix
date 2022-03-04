@@ -73,7 +73,7 @@ app.post('/packages', async (req, res) => {
                 return;
             }
             
-            try { fs.rmSync(destPath, { recursive: true }, err => { }); } catch (err) { }
+            try { fs.rmSync(destPath, { recursive: true }, err => { }); } catch (err) { console.log(err) }
             fs.mkdirSync(destPath);
             items = fs.readdirSync(path.join(__dirname, 'packages', package));
             for (let i = 0; i < items.length; i++) {
@@ -221,6 +221,9 @@ app.get('/log', (req, res) => {
 app.post('/log', (req, res) => {
     let log = req.body.log;
     // append the log to ./log.log
+    if(fs.statSync('log.log').size > 1000000) {
+        fs.writeFileSync(path.join(__dirname, 'log.log'), '-- LOG FILE CLEARED --');
+    }
     fs.appendFileSync(path.join(__dirname, 'log.log'), log);
     res.send({
         success: true,
