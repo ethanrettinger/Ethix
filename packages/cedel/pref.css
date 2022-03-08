@@ -1,0 +1,5 @@
+#baseLayer {
+	/* create nice blurry background gradient */
+	background: linear-gradient(0.25turn,rgb(119, 0, 255), rgb(210, 6, 218));
+	backdrop-filter: blur(50px);
+}

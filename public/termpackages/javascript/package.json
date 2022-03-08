@@ -1,0 +1,9 @@
+{
+    "name": "javascript",
+    "version": "1.0.0",
+    "description": "This is a very good package written by Katelyn Hodge herself.",
+    "author": "Katelyn Hodge",
+    "scripts": [
+        "index.js"
+    ]
+}

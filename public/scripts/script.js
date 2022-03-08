@@ -1,15 +1,11 @@
 const commandManager = new CommandManager();
 const terminal = new Term();
-
-// write welcome message to the terminal
-terminal.log('\n\n\n\n\n\n\nETHIX'.lightgreen().bold() + ' Terminal v0.1.4');
-terminal.log('Last Updated: ' + '2/28/2022'.gray());
-terminal.log("ETHIX " + "-> Ethan's Unix Terminal\n\n\n".gray());
-
 // input handler
+let backnavCursorLocation = 0;
 document.getElementById('in').addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
     e.preventDefault();
+    backnavCursorLocation = 0;
     let command = document.getElementById('in').value;
     document.getElementById('in').value = '';
     terminal.log('$ > ' + command);
@@ -19,6 +15,14 @@ document.getElementById('in').addEventListener('keydown', function (e) {
     } else {
         terminal.err('Command not found');
     }
+    // send post to /command 
+    fetch('/command', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ command: command })
+    });
 });
 // when the tab key is pressed, autocomplete the command
 document.getElementById('in').addEventListener('keydown', function (e) {
@@ -56,18 +60,32 @@ window.onload = function () {
             // for each package, add it to the terminal
             let { packages: data } = dat;
             for (let i = 0; i < data.length; i++) {
-                terminal.log(`Located package ${data[i]}`.green());
-                terminal.log(`Installing package ${data[i]}...`.yellow());
+                terminal.log('Located package '.gray() + `${data[i]}`.green().bold());
+                terminal.log(`\tInstalling package ${data[i]}...`.yellow());
                 let script = document.createElement('script');
                 script.id = `package-${data[i]}`;
                 script.src = `/termpackages/${data[i]}/index.js`;
                 document.body.appendChild(script);
-                terminal.log(`Package ${data[i]} installed!`.green());
+                terminal.log(`\tPackage ${data[i]} installed!`.green());
             }
         });
 };
 // when the page loads fetch /log and write the log to the terminal
 // the response is the entire log file
+// when up or down arrow key is pressed change backnav cursor location
+
+document.getElementById('in').addEventListener('keydown', function (e) {
+    if(e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+    if (e.key === 'ArrowUp') {
+        backnavCursorLocation++;
+    } else if (e.key === 'ArrowDown') {
+        if(backnavCursorLocation > 0) backnavCursorLocation--;
+    }
+    console.log(backnavCursorLocation);
+    terminal.backnav(backnavCursorLocation);
+});
+
 fetch('/log', {
     method: 'GET',
     headers: {

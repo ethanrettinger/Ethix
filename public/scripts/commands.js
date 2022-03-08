@@ -39,7 +39,11 @@ class CommandManager {
         this.commands[commandName].func(commandArgs);
     }
     tabComplete(text) {
-        
+        for (let command in this.commands) {
+            if (command.toLowerCase().startsWith(text.toLowerCase())) {
+                return command;
+            }
+        }
     }
 }
 

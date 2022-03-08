@@ -1,0 +1,9 @@
+{
+    "name": "alias",
+    "version": "1.0.0",
+    "description": "Create quick aliases for commands",
+    "author": "Ethan Rettinger",
+    "scripts": [
+        "index.js"
+    ]
+}
