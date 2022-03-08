@@ -62,7 +62,42 @@ app.post('/packages', async (req, res) => {
             res.send({
                 success: true,
                 message: 'Successfully reinstalled package',
+<<<<<<< HEAD
                 scripts: packageJson,
+=======
+                scripts: packageJson
+            });
+            break;
+        case 'reinstall':
+            // delete the package from public/termpackages
+            // if the package doesn't exist in the public/termpackages folder, continue normally
+            package = req.body.package;
+            packagePath = path.join(__dirname, 'packages', package);
+            destPath = path.join(__dirname, 'public', 'termpackages', package);
+            if (!fs.existsSync(packagePath)) {
+                res.send({
+                    success: false,
+                    message: 'No package available.',
+                });
+                return;
+            }
+            
+            try { fs.rmSync(destPath, { recursive: true }, err => { }); } catch (err) { console.log(err) }
+            fs.mkdirSync(destPath);
+            items = fs.readdirSync(path.join(__dirname, 'packages', package));
+            for (let i = 0; i < items.length; i++) {
+                let file = items[i];
+                let filePath = path.join(packagePath, file);
+                let destFilePath = path.join(destPath, file);
+                fs.copyFileSync(filePath, destFilePath);
+            }
+            // get the scripts key from the package.json
+            scriptsJson = JSON.parse(fs.readFileSync(path.join(packagePath, 'package.json'))).scripts;
+            res.send({
+                success: true,
+                message: 'Successfully reinstalled package',
+                scripts: scriptsJson
+>>>>>>> bfe0a648877db6879888543f074a7f480a570564
             });
             break;
         case 'uninstall':
@@ -232,7 +267,11 @@ app.get('/log', (req, res) => {
 app.post('/log', (req, res) => {
     let log = req.body.log;
     // append the log to ./log.log
+<<<<<<< HEAD
     if (fs.statSync('log.log').size > 1000000) {
+=======
+    if(fs.statSync('log.log').size > 1000000) {
+>>>>>>> bfe0a648877db6879888543f074a7f480a570564
         fs.writeFileSync(path.join(__dirname, 'log.log'), '-- LOG FILE CLEARED --');
     }
     fs.appendFileSync(path.join(__dirname, 'log.log'), log);

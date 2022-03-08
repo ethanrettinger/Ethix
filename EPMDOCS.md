@@ -134,6 +134,7 @@ All colors:
 - strike
 
 > Note: You can also add newlines and tabs into messages written to the terminal with \n and \t respectively.
+<<<<<<< HEAD
 
 ---
 
@@ -258,3 +259,5 @@ Here is what I want it to look like soon:
 }
 ```
 
+=======
+>>>>>>> bfe0a648877db6879888543f074a7f480a570564
